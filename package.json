@@ -1,0 +1,29 @@
+{
+  "private": true,
+  "scripts": {
+    "dev": "next",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.11.1",
+    "@reduxjs/toolkit": "^2.2.0",
+    "bcrypt": "^6.0.0",
+    "js-yaml": "^4.1.0",
+    "next": "latest",
+    "prisma": "^6.11.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-redux": "^9.1.0",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/node": "20.2.5",
+    "@types/react": "18.2.37",
+    "@types/react-dom": "^18.2.18",
+    "prettier": "^3.6.2",
+    "prettier-plugin-prisma": "^5.0.0",
+    "typescript": "^5.3.3"
+  }
+}

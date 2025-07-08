@@ -1,0 +1,358 @@
+openapi: 
+  3.0.0
+paths: 
+  /userRole:
+    post:
+      summary: add role to user
+      tags:
+        - Users
+        - Roles
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRole'
+      responses:
+        '200':
+          description: A user role
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserRole'
+info:
+  title: User Management API
+  version: 1.0.0
+  description: Flexible user management system with modular features
+components:
+  schemas:
+    # --- Core Tables ---
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+          x-autoincrement: true
+        username:
+          type: string
+          example: johndoe
+          minLength: 3
+          maxLength: 50
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password_hash:
+          type: string
+          writeOnly: true
+        first_name:
+          type: string
+          example: John
+          maxLength: 50
+        last_name:
+          type: string
+          example: Doe
+          maxLength: 50
+        is_active:
+          type: boolean
+          default: true
+        email_verified:
+          type: boolean
+          default: false
+        last_login:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        tenant_id:
+          type: integer
+          nullable: true
+          description: For multi-tenancy support
+      required:
+        - id
+        - username
+        - email
+        - password_hash
+
+    # --- RBAC Tables ---
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          x-autoincrement: true
+        name:
+          type: string
+          example: admin
+          maxLength: 50
+        description:
+          type: string
+          example: Administrator role
+          maxLength: 255
+        is_default:
+          type: boolean
+          default: false
+      required:
+        - id
+    Permission:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          x-autoincrement: true
+        code:
+          type: string
+          example: user:delete
+          maxLength: 100
+        description:
+          type: string
+          example: Delete users
+          maxLength: 255
+      required:
+        - id
+    # --- Relation Tables ---
+    UserRole:
+      type: object
+      description: Many-to-many relationship between Users and Roles
+      properties:
+        user_id:
+          allOf:
+            - $ref: '#/components/schemas/User/properties/id'
+            - description: Foreign key to User.id
+        role_id:
+          allOf:
+            - $ref: '#/components/schemas/Role/properties/id'
+            - description: Foreign key to Role.id
+
+    RolePermission:
+      type: object
+      description: Many-to-many relationship between Roles and Permissions
+      properties:
+        role_id:
+          allOf:
+            - $ref: '#/components/schemas/Role/properties/id'
+            - description: Foreign key to Role.id
+        permission_id:
+          allOf:
+            - $ref: '#/components/schemas/Permission/properties/id'
+            - description: Foreign key to Permission.id
+
+    # --- Security Tables ---
+    PasswordReset:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          x-autoincrement: true
+        user_id:
+          allOf:
+            - $ref: '#/components/schemas/User/properties/id'
+            - description: Foreign key to User.id
+        token:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+        used:
+          type: boolean
+          default: false
+      required:
+        - id
+
+    Session:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          x-autoincrement: true
+        user_id:
+          allOf:
+            - $ref: '#/components/schemas/User/properties/id'
+            - description: Foreign key to User.id
+        token:
+          type: string
+        device_info:
+          type: object
+          properties:
+            os: { type: string }
+            browser: { type: string }
+            ip: { type: string }
+        created_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        last_activity:
+          type: string
+          format: date-time
+      required:
+        - id
+    # --- Audit Logging ---
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          x-autoincrement: true
+        user_id:
+          allOf:
+            - $ref: '#/components/schemas/User/properties/id'
+            - description: Foreign key to User.id
+          nullable: true
+        action:
+          type: string
+          example: USER_LOGIN
+        target_entity:
+          type: string
+          example: User
+        target_id:
+          type: integer
+          format: int64
+          nullable: true
+        details:
+          type: object
+          additionalProperties: true
+        ip_address:
+          type: string
+          example: 192.168.1.1
+        user_agent:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - id
+    # --- Custom Fields ---
+    CustomFieldDefinition:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          x-autoincrement: true
+        entity_type:
+          type: string
+          example: User
+        field_name:
+          type: string
+          example: employee_id
+        field_type:
+          type: string
+          enum: [string, integer, boolean, date, enum]
+          example: string
+        label:
+          type: string
+          example: Employee ID
+        required:
+          type: boolean
+          default: false
+        options:
+          type: array
+          items: { type: string }
+          nullable: true
+      required:
+        - id
+    CustomFieldValue:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          x-autoincrement: true
+        field_definition_id:
+          allOf:
+            - $ref: '#/components/schemas/CustomFieldDefinition/properties/id'
+            - description: Foreign key to CustomFieldDefinition.id
+        entity_id:
+          type: integer
+          format: int64
+        value:
+          type: string
+      required:
+        - id
+    # --- Multi-Tenancy ---
+    Tenant:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          x-autoincrement: true
+        name:
+          type: string
+          example: Acme Corp
+        slug:
+          type: string
+          example: acme
+        config:
+          type: object
+          additionalProperties: true
+      required:
+        - id
+    # --- Internationalization ---
+    Translation:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          x-autoincrement: true
+        key:
+          type: string
+          example: login.title
+        language_code:
+          type: string
+          example: en
+        value:
+          type: string
+          example: Login
+      required:
+        - id
+    # --- Notifications ---
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          x-autoincrement: true
+        user_id:
+          allOf:
+            - $ref: '#/components/schemas/User/properties/id'
+            - description: Foreign key to User.id
+        title:
+          type: string
+          example: Password Changed
+        message:
+          type: string
+          example: Your password was successfully changed
+        type:
+          type: string
+          enum: [INFO, WARNING, ALERT]
+          default: INFO
+        read:
+          type: boolean
+          default: false
+        created_at:
+          type: string
+          format: date-time
+        action_link:
+          type: string
+          nullable: true
+      required:
+        - id

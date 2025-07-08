@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                  Int       @id @default(autoincrement())
+  username            String
+  email               String
+  password_hash       String
+  first_name          String?
+  last_name           String?
+  is_active           Boolean?  @default(true)
+  email_verified      Boolean?  @default(false)
+  last_login          DateTime?
+  created_at          DateTime?
+  updated_at          DateTime?
+  tenant_id           Int?
+  name                String?
+  description         String?
+  is_default          Boolean?  @default(false)
+  code                String?
+  user_id             Json?
+  role_id             Json?
+  permission_id       Json?
+  token               String?
+  expires_at          DateTime?
+  used                Boolean?  @default(false)
+  device_info         Json?
+  last_activity       DateTime?
+  action              String?
+  target_entity       String?
+  target_id           Int?
+  details             Json?
+  ip_address          String?
+  user_agent          String?
+  timestamp           DateTime?
+  entity_type         String?
+  field_name          String?
+  field_type          String?
+  label               String?
+  required            Boolean?  @default(false)
+  options             Json?
+  field_definition_id Json?
+  entity_id           Int?
+  value               String?
+  slug                String?
+  config              Json?
+  key                 String?
+  language_code       String?
+  title               String?
+  message             String?
+  type                String?   @default("INFO")
+  read                Boolean?  @default(false)
+  action_link         String?
+}
+
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        String?
+  description String?
+  is_default  Boolean? @default(false)
+}
+
+model Permission {
+  id          Int     @id @default(autoincrement())
+  code        String?
+  description String?
+}
+
+model UserRole {
+  user_id Json
+  role_id Json
+
+  @@id([user_id, role_id])
+}
+
+model RolePermission {
+  role_id       Json
+  permission_id Json
+  @@id([role_id, permission_id])
+}
+
+model PasswordReset {
+  id         Int       @id @default(autoincrement())
+  user_id    Json?
+  token      String?
+  expires_at DateTime?
+  used       Boolean?  @default(false)
+}
+
+model Session {
+  id            Int       @id @default(autoincrement())
+  user_id       Json?
+  token         String?
+  device_info   Json?
+  created_at    DateTime?
+  expires_at    DateTime?
+  last_activity DateTime?
+}
+
+model AuditLog {
+  id            Int       @id @default(autoincrement())
+  user_id       Json?
+  action        String?
+  target_entity String?
+  target_id     Int?
+  details       Json?
+  ip_address    String?
+  user_agent    String?
+  timestamp     DateTime?
+}
+
+model CustomFieldDefinition {
+  id          Int      @id @default(autoincrement())
+  entity_type String?
+  field_name  String?
+  field_type  String?
+  label       String?
+  required    Boolean? @default(false)
+  options     Json?
+}
+
+model CustomFieldValue {
+  id                  Int     @id @default(autoincrement())
+  field_definition_id Json?
+  entity_id           Int?
+  value               String?
+}
+
+model Tenant {
+  id     Int     @id @default(autoincrement())
+  name   String?
+  slug   String?
+  config Json?
+}
+
+model Translation {
+  id            Int     @id @default(autoincrement())
+  key           String?
+  language_code String?
+  value         String?
+}
+
+model Notification {
+  id          Int       @id @default(autoincrement())
+  user_id     Json?
+  title       String?
+  message     String?
+  type        String?   @default("INFO")
+  read        Boolean?  @default(false)
+  created_at  DateTime?
+  action_link String?
+}
