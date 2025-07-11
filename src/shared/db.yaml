@@ -1,31 +1,68 @@
-openapi: 
-  3.0.0
-paths: 
-  /userRole:
+openapi: 3.0.0
+info:
+  title: User Management API
+  version: 1.0.0
+  description: Flexible user management system with modular features
+paths:
+  /registration:
     post:
-      summary: add role to user
+      summary: add user
       tags:
         - Users
-        - Roles
       requestBody:
         required: true
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/UserRole'
+              $ref: "#/components/schemas/User"
       responses:
-        '200':
-          description: A user role
+        "200":
+          description: A user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /users:
+    get:
+      summary: get all users
+      tags:
+        - Users
+      responses:
+        "200":
+          description: A user
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UserRole'
-info:
-  title: User Management API
-  version: 1.0.0
-  description: Flexible user management system with modular features
+                  $ref: "#/components/schemas/User"
+  /auth/login:
+    post:
+      summary: login user
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                email:
+                  $ref: "#/components/schemas/User/properties/email"
+                password:
+                  $ref: "#/components/schemas/User/properties/password"
+              required:
+                - email
+                - password
+
+      responses:
+        "200":
+          description: A user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
 components:
   schemas:
     # --- Core Tables ---
@@ -37,6 +74,7 @@ components:
           format: int64
           example: 1
           x-autoincrement: true
+          readOnly: true
         username:
           type: string
           example: johndoe
@@ -46,9 +84,10 @@ components:
           type: string
           format: email
           example: user@example.com
-        password_hash:
+        password:
           type: string
           writeOnly: true
+          minLength: 6
         first_name:
           type: string
           example: John
@@ -66,12 +105,15 @@ components:
         last_login:
           type: string
           format: date-time
+          readOnly: true
           nullable: true
         created_at:
           type: string
+          readOnly: true
           format: date-time
         updated_at:
           type: string
+          readOnly: true
           format: date-time
         tenant_id:
           type: integer
@@ -81,7 +123,7 @@ components:
         - id
         - username
         - email
-        - password_hash
+        - password
 
     # --- RBAC Tables ---
     Role:
@@ -91,6 +133,7 @@ components:
           type: integer
           format: int64
           x-autoincrement: true
+          readOnly: true
         name:
           type: string
           example: admin
@@ -111,6 +154,7 @@ components:
           type: integer
           format: int64
           x-autoincrement: true
+          readOnly: true
         code:
           type: string
           example: user:delete
@@ -126,27 +170,41 @@ components:
       type: object
       description: Many-to-many relationship between Users and Roles
       properties:
+        id:
+          type: integer
+          format: int64
+          x-autoincrement: true
+          readOnly: true
         user_id:
-          allOf:
-            - $ref: '#/components/schemas/User/properties/id'
-            - description: Foreign key to User.id
+          type: integer
+          format: int64
+          description: Foreign key to User.id
+          $ref: "#/components/schemas/User/properties/id"
         role_id:
-          allOf:
-            - $ref: '#/components/schemas/Role/properties/id'
-            - description: Foreign key to Role.id
+          type: integer
+          format: int64
+          $ref: "#/components/schemas/Role/properties/id"
+          description: Foreign key to Role.id
 
     RolePermission:
       type: object
       description: Many-to-many relationship between Roles and Permissions
       properties:
+        id:
+          type: integer
+          format: int64
+          x-autoincrement: true
+          readOnly: true
         role_id:
-          allOf:
-            - $ref: '#/components/schemas/Role/properties/id'
-            - description: Foreign key to Role.id
+          type: integer
+          format: int64
+          $ref: "#/components/schemas/Role/properties/id"
+          description: Foreign key to Role.id
         permission_id:
-          allOf:
-            - $ref: '#/components/schemas/Permission/properties/id'
-            - description: Foreign key to Permission.id
+          type: integer
+          format: int64
+          $ref: "#/components/schemas/Permission/properties/id"
+          description: Foreign key to Permission.id
 
     # --- Security Tables ---
     PasswordReset:
@@ -156,10 +214,12 @@ components:
           type: integer
           format: int64
           x-autoincrement: true
+          readOnly: true
         user_id:
-          allOf:
-            - $ref: '#/components/schemas/User/properties/id'
-            - description: Foreign key to User.id
+          type: integer
+          format: int64
+          $ref: "#/components/schemas/User/properties/id"
+          description: Foreign key to User.id
         token:
           type: string
         expires_at:
@@ -178,10 +238,12 @@ components:
           type: integer
           format: int64
           x-autoincrement: true
+          readOnly: true
         user_id:
-          allOf:
-            - $ref: '#/components/schemas/User/properties/id'
-            - description: Foreign key to User.id
+          type: integer
+          format: int64
+          $ref: "#/components/schemas/User/properties/id"
+          description: Foreign key to User.id
         token:
           type: string
         device_info:
@@ -192,6 +254,7 @@ components:
             ip: { type: string }
         created_at:
           type: string
+          readOnly: true
           format: date-time
         expires_at:
           type: string
@@ -209,10 +272,12 @@ components:
           type: integer
           format: int64
           x-autoincrement: true
+          readOnly: true
         user_id:
-          allOf:
-            - $ref: '#/components/schemas/User/properties/id'
-            - description: Foreign key to User.id
+          type: integer
+          format: int64
+          $ref: "#/components/schemas/User/properties/id"
+          description: Foreign key to User.id
           nullable: true
         action:
           type: string
@@ -245,6 +310,7 @@ components:
           type: integer
           format: int64
           x-autoincrement: true
+          readOnly: true
         entity_type:
           type: string
           example: User
@@ -274,10 +340,12 @@ components:
           type: integer
           format: int64
           x-autoincrement: true
+          readOnly: true
         field_definition_id:
-          allOf:
-            - $ref: '#/components/schemas/CustomFieldDefinition/properties/id'
-            - description: Foreign key to CustomFieldDefinition.id
+          type: integer
+          format: int64
+          $ref: "#/components/schemas/CustomFieldDefinition/properties/id"
+          description: Foreign key to CustomFieldDefinition.id
         entity_id:
           type: integer
           format: int64
@@ -293,6 +361,7 @@ components:
           type: integer
           format: int64
           x-autoincrement: true
+          readOnly: true
         name:
           type: string
           example: Acme Corp
@@ -312,6 +381,7 @@ components:
           type: integer
           format: int64
           x-autoincrement: true
+          readOnly: true
         key:
           type: string
           example: login.title
@@ -331,10 +401,12 @@ components:
           type: integer
           format: int64
           x-autoincrement: true
+          readOnly: true
         user_id:
-          allOf:
-            - $ref: '#/components/schemas/User/properties/id'
-            - description: Foreign key to User.id
+          type: integer
+          format: int64
+          $ref: "#/components/schemas/User/properties/id"
+          description: Foreign key to User.id
         title:
           type: string
           example: Password Changed
@@ -350,6 +422,7 @@ components:
           default: false
         created_at:
           type: string
+          readOnly: true
           format: date-time
         action_link:
           type: string

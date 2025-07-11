@@ -1,7 +1,8 @@
 'use client';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '@/store/slices/auth_slice';
-import LoginForm from '@/components/auth/LoginForm';
+import LoginPost from '@/components/auth/login/LoginPost';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const dispatch = useDispatch();
@@ -15,5 +16,9 @@ export default function LoginPage() {
     dispatch(setCredentials(data));
   };
 
-  return <LoginForm onSubmit={handleLogin} />;
+  return <>
+    <LoginPost />
+    
+    <div className='pt-3'>Doesn't have an account? <Link href="/register">Register</Link></div>
+  </>;
 }

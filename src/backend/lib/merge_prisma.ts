@@ -1,5 +1,6 @@
 import fs from 'fs';
-import yaml from 'js-yaml'; import prettier from 'prettier';
+import yaml from 'js-yaml'; 
+import * as prettier from 'prettier';
 
 import { loadYaml } from './json_prisma';
 
@@ -9,6 +10,8 @@ interface Property {
   default?: any;
   nullable?: boolean;
   'x-autoincrement'?: boolean;
+  '$ref'?: string; 
+  description?: string
 }
 
 interface Schema {
@@ -27,19 +30,26 @@ function mapType(prop: Property): string {
   }
 }
 
-function generateFieldLine(
+export function generateFieldLine(
   key: string,
   prop: Property,
   required: string[] = []
 ): string {
   const type = mapType(prop);
   const optional = prop.nullable || !required.includes(key) ? '?' : '';
-  const defaultVal = 
-  prop['x-autoincrement'] ? '@id @default(autoincrement())' :
-  prop.default !== undefined
-    ? ` @default(${typeof prop.default == 'boolean' || typeof prop.default == 'number' ? prop.default : `"${prop.default}"`})`
-    :  '';
-  return `  ${key} ${type}${optional}${defaultVal}`;
+  const defaultVal =
+    prop['x-autoincrement'] ? '@id @default(autoincrement())' :
+      prop.default !== undefined
+        ? ` @default(${typeof prop.default == 'boolean' || typeof prop.default == 'number' ? prop.default : `"${prop.default}"`})`
+        : '';
+  let res = `  ${key} ${type}${optional}${defaultVal}`;
+  if (prop['$ref']) {
+    const refs:string[] = prop['$ref'].split('/');
+    const rel_ref = refs[refs.length - 1];
+    const rel_table = refs[refs.length - 3];
+    res += `\n  ${rel_table}   ${rel_table}? @relation(fields: [${key}], references: [${rel_ref}])`;
+  }
+  return res;
 }
 
 function mergeIntoExistingSchema(

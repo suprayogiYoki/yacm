@@ -1,6 +1,7 @@
 'use client';
+import RegistrationPost from '@/components/registration/RegistrationPost';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import RegisterForm from '@/components/auth/RegisterForm';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -13,5 +14,9 @@ export default function RegisterPage() {
     router.push('/login');
   };
 
-  return <RegisterForm onSubmit={handleRegister} />;
+  return <>
+    <RegistrationPost />
+    <div className='pt-3'>Already has an account? <Link href="/login">Login</Link></div>
+  </>
+  // return <RegisterForm onSubmit={handleRegister} />;
 }

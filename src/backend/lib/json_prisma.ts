@@ -1,5 +1,6 @@
 import fs from 'fs';
 import yaml from 'js-yaml';
+import { generateFieldLine } from './merge_prisma';
 
 interface Property {
   type: string;
@@ -17,28 +18,12 @@ interface Schema {
   required?: string[];
 }
 
-function mapType(prop: Property): string {
-  if (prop.format === 'date-time') return 'DateTime';
-  switch (prop.type) {
-    case 'integer': return 'Int';
-    case 'boolean': return 'Boolean';
-    case 'string': return 'String';
-    default: return 'Json';
-  }
-}
-
 function generatePrismaField(
   key: string,
   prop: Property,
   required: string[] = []
 ): string {
-  const type = mapType(prop);
-  const optional = prop.nullable || !required.includes(key) ? '?' : '';
-  const defaultVal =  prop['x-autoincrement'] ? '@id @default(autoincrement())' :
-  prop.default !== undefined
-    ? ` @default(${typeof prop.default == 'boolean' || typeof prop.default == 'number' ? prop.default : `"${prop.default}"`})`
-    :  '';
-  return `  ${key} ${type}${optional}${defaultVal}`;
+  return generateFieldLine(key, prop, required);
 }
 
 function generatePrismaModel(name: string, schema: Schema): string {

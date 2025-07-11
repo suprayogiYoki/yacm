@@ -1,0 +1,21 @@
+@use "tailwindcss";
+
+/* Optional base styles */
+@layer base {
+  html {
+    @apply scroll-smooth;
+
+    body {
+      padding: 3px;
+
+      a {
+        color: #2563eb;
+      }
+      a:hover {
+        color: #1e40af;
+        text-decoration-thickness: 2px;
+        text-decoration: underline;
+      }
+    }
+  }
+}
