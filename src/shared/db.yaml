@@ -99,6 +99,9 @@ components:
         is_active:
           type: boolean
           default: true
+          enum:
+            - true
+            - false
         email_verified:
           type: boolean
           default: false
@@ -119,6 +122,9 @@ components:
           type: integer
           nullable: true
           description: For multi-tenancy support
+          x-rel: 
+            name: Tenant
+            fk: id
       required:
         - id
         - username

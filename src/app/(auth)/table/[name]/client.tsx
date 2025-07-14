@@ -1,32 +1,11 @@
 'use client';
 import { InputBuilder } from '@/lib/builder/InputBuilder';
 import { ProColumns, ProFormDateTimePicker, ProTable } from '@ant-design/pro-components';
-import { Card } from 'antd';
+import { Button, Card } from 'antd';
 import { useEffect } from 'react';
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 
 // Sample data for the table, explicitly typed as DataItem[]
-const initialData: any[] = [
-  {
-    id: '1',
-    email: 'John Brown',
-  },
-  {
-    id: '2',
-    email: 'John Brown 2',
-  },
-  {
-    id: '3',
-    email: 'John Brown 3',
-  },
-  {
-    id: '4',
-    email: 'John Brown 4',
-  },
-  {
-    id: '5',
-    email: 'John Brown 5',
-  },
-];
 
 const fetcher = async ({ queryJson, bodyJson, path, method }: { queryJson?: any, bodyJson?: any, path: string, method: string }) => {
   let url = "/api" + path;
@@ -42,9 +21,9 @@ const fetcher = async ({ queryJson, bodyJson, path, method }: { queryJson?: any,
   }).then((res) => res.json());
 }
 
-const TableGenerator = ({ schema, schemas, reqOpt, resOpt, path, method }: any) => {
+export const Client = ({ table, schema, schemas }: any) => {
   useEffect(() => {
-    console.info('openapi', schema, schemas, reqOpt, resOpt, path, method);
+    console.info('openapi', table, schema, schemas);
   }, []);
 
   const columns: ProColumns<any>[] = [
@@ -53,7 +32,7 @@ const TableGenerator = ({ schema, schemas, reqOpt, resOpt, path, method }: any) 
       valueType: 'indexBorder',
       width: 48,
     },
-    ...Object.entries(resOpt.items.properties).map(([name, item]: any): ProColumns => {
+    ...Object.entries(schema.properties).map(([name, item]: any): ProColumns => {
       return ({
         title: name,
         dataIndex: name,
@@ -61,15 +40,28 @@ const TableGenerator = ({ schema, schemas, reqOpt, resOpt, path, method }: any) 
         formItemProps: {
           rules: [
             {
-              required: (resOpt.items.required ?? []).indexOf(name) !== -1,
+              required: (schema.required ?? []).indexOf(name) !== -1,
             },
           ],
         },
-        renderFormItem: (schema, config, form, action) => {
+        onCell: (record) => ({
+          style: { maxWidth: '200px', backgroundColor: '#f0f0f0' }
+        }),
+        renderFormItem: (_schema, _config, _form, _action) => {
           return InputBuilder({ schemas, item, name });
         },
       });
-    })
+    }),
+    {
+      title: 'Actions',
+      key: 'actions',
+      fixed: 'right',
+      width: 120,
+      render: (_, record, index) => ([
+        <Button key={`edit-${index}`} type="link" onClick={() => console.log('Edit', record)} icon={<EditOutlined/>} />,
+        <Button key={`delete-${index}`} type="link" onClick={() => console.log('Delete', record)} icon={<DeleteOutlined/>} />
+      ]),
+    },
   ];
 
   return (
@@ -98,27 +90,26 @@ const TableGenerator = ({ schema, schemas, reqOpt, resOpt, path, method }: any) 
             showSizeChanger: false,
           }}
           request={async (params) => {
-            let ret = {
-              success: false,
-              data: [],
-              total: 0,
-            };
-            await fetcher({
-              path: path,
-              method: method,
-            }).then((res) => {
-              ret = {
-                success: true,
-                data: res.user_data,
-                total: res.user_data.length,
-              };
-            });
-            return ret ;
+            console.log('params', params);
+            const { current, pageSize } = params
+            return await fetcher({
+              path: `/table/${table}`,
+              method: 'get',
+              queryJson: params,
+            })
           }}
+          options={{
+            reload: true,
+            density: true,
+            setting: true,
+            fullScreen: true,
+          }}
+          scroll={{ x: 'max-content' }}
+          toolBarRender={(action, { selectedRows, }) => [
+            <Button type="primary" icon={<PlusOutlined />}>Add</Button>
+          ]}
         />
       </Card>
     </div>
   );
 };
-
-export default TableGenerator;

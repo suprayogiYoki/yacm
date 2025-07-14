@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
-import Client from './client';
 
 // dibuang di client
 import yaml from 'js-yaml';
 import fs from 'fs';
 import { inDeepSchema } from '@/backend/lib/lib_gen';
+import TableGenerator from './client';
 
 export function generateMetadata({ params }: any): Metadata {
   // const post = await fetch(`https://api.example.com/posts/${params.slug}`).then(res => res.json())
@@ -22,20 +22,20 @@ export function getYaml() {
 
 const openapi = getYaml()
 
-const Page = () => {
+const path:string = '/users';
+const method:string = 'get';
+
+const getApiSchema = function () {
   const schemas = openapi.components?.schemas || {};
-  const op = openapi.paths['/users'].get;
-  const reqtype = Object.keys(op?.requestBody?.content ?? {})[0];
-  const schemaRequest = inDeepSchema({ schema: op?.requestBody?.content?.[reqtype]?.schema, schemas: schemas });
-  const schemaResponse = inDeepSchema({ schema: op?.responses?.['200']?.content?.['application/json']?.schema, schemas: schemas });
+  const schema = openapi.paths[path][method];
+  const reqtype = Object.keys(schema?.requestBody?.content ?? {})[0];
+  const reqOpt = inDeepSchema({ schema: schema?.requestBody?.content?.[reqtype]?.schema, schemas: schemas });
+  const resOpt = inDeepSchema({ schema: schema?.responses?.['200']?.content?.['application/json']?.schema, schemas: schemas });
+  return { schema, schemas, reqOpt, resOpt, path, method }
+}
 
-
-
-  // console.info('schemaRequest', schemaRequest);
-  console.info('schemaResponse', schemaResponse);
-  // console.info('columns', columns);
-
-  return <Client openapi={openapi} schemaResponse={schemaResponse}/>
+const Page = async () => {
+  return <TableGenerator { ...getApiSchema() } />
 };
 
 export default Page;
