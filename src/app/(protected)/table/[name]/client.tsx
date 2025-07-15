@@ -1,10 +1,11 @@
 'use client';
 import { InputBuilder } from '@/lib/builder/InputBuilder';
-import { ProColumns, ProFormDateTimePicker, ProTable } from '@ant-design/pro-components';
-import { Button, Card } from 'antd';
-import { useEffect } from 'react';
+import { ActionType, ProColumns, ProFormDateTimePicker, ProTable } from '@ant-design/pro-components';
+import { Button, Card, Popconfirm } from 'antd';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
+import { labelcase } from '@/shared/string';
 
 // Sample data for the table, explicitly typed as DataItem[]
 
@@ -24,46 +25,70 @@ const fetcher = async ({ queryJson, bodyJson, path, method }: { queryJson?: any,
 
 export const Client = ({ table, schema, schemas }: any) => {
   const router = useRouter();
+  const actionRef = useRef<ActionType>();
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  const columns: ProColumns<any>[] = [
+
+  const handleDelete = async (id: number) => {
+    setDeletingId(id); // Show loading on this row
+    await fetcher({ path: `/delete/${table}/${id}`, method: 'DELETE' });
+    setDeletingId(null);
+    actionRef.current?.reload(); // Refresh table
+  };
+
+
+  const columns: ProColumns<any>[] = useMemo(() =>
+  ([
     {
       dataIndex: 'index',
       valueType: 'indexBorder',
       width: 48,
     },
     ...Object.entries(schema.properties)
-    .filter(([name, item]: any) => !item.writeOnly)
-    .map(([name, item]: any): ProColumns => {
-      return ({
-        title: name,
-        dataIndex: name,
-        ellipsis: true,
-        formItemProps: {
-          rules: [
-            {
-              required: (schema.required ?? []).indexOf(name) !== -1,
-            },
-          ],
-        },
-        onCell: (record) => ({
-          style: { maxWidth: '200px', backgroundColor: '#f0f0f0' }
-        }),
-        renderFormItem: (_schema, _config, _form, _action) => {
-          return InputBuilder({ schemas, item, name });
-        },
-      });
-    }),
+      .filter(([name, item]: any) => !item.writeOnly)
+      .map(([name, item]: any): ProColumns => {
+        return ({
+          title: labelcase(name),
+          dataIndex: name,
+          ellipsis: true,
+          formItemProps: {
+            rules: [
+              {
+                required: (schema.required ?? []).indexOf(name) !== -1,
+              },
+            ],
+          },
+          onCell: (record) => ({
+            style: { maxWidth: '200px', backgroundColor: '#f0f0f0' }
+          }),
+          renderFormItem: (_schema, _config, _form, _action) => {
+            return InputBuilder({ schemas, item, name });
+          },
+        });
+      }),
     {
       title: 'Actions',
       key: 'actions',
       fixed: 'right',
       width: 120,
-      render: (_, record, index) => ([
-        <Button key={`edit-${index}`} type="link" onClick={() => router.push(`/edit/${table}/${record.id}`)} icon={<EditOutlined/>} />,
-        <Button key={`delete-${index}`} type="link" onClick={() => console.log('Delete', record)} icon={<DeleteOutlined/>} />
+      render: (_, record:any, index) => ([
+        <Button key={`edit-${index}`} type="link" onClick={() => router.push(`/edit/${table}/${record.id}`)} icon={<EditOutlined />} />,
+        <Popconfirm
+          title="Are you sure to delete?"
+          onConfirm={() => handleDelete(record.id)}
+          okButtonProps={{ loading: deletingId === record.id }}
+        >
+          <Button
+            type="link"
+            danger
+            icon={<DeleteOutlined />}
+            loading={deletingId === record.id}
+          />
+        </Popconfirm>
       ]),
     },
-  ];
+  ]), [schema, schemas]);
+
 
   return (
     <div className="min-h-screen bg-gray-100 p-8 flex items-center justify-center font-sans">
@@ -81,6 +106,7 @@ export const Client = ({ table, schema, schemas }: any) => {
         }}
       >
         <ProTable
+          actionRef={actionRef}
           columns={columns}
           rowKey={record => record.id}
           search={{
@@ -107,7 +133,7 @@ export const Client = ({ table, schema, schemas }: any) => {
           }}
           scroll={{ x: 'max-content' }}
           toolBarRender={(action, { selectedRows, }) => [
-            <Button type="primary" icon={<PlusOutlined />}>Add</Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push(`/add/${table}`)}>Add</Button>
           ]}
         />
       </Card>

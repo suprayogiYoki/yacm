@@ -3,6 +3,7 @@
 import { getApiSchema } from "@/lib/builder/SchemaParser";
 import { Metadata } from "next";
 import { Client } from "./client";
+import { notFound } from "next/navigation";
 
 export async function generateMetadata({
   params,
@@ -18,7 +19,6 @@ export async function generateMetadata({
   }
 }
 
-
 export default async function TablePage({
   params,
 }: {
@@ -27,5 +27,10 @@ export default async function TablePage({
   const name = (await params).name
 
   const apiSchema = getApiSchema({table: name});
+
+  if(!apiSchema.schema) {
+    notFound();
+  }
+
   return <Client table={name} schema={apiSchema.schema} schemas={apiSchema.schemas} />;
 }

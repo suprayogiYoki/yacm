@@ -11,38 +11,35 @@ async function comparePassword(password: string, hashedPassword: string) {
 
 export const context = {
   bodyModifier: async ({ req, body }: { req: Request, body: { [key: string]: any } }) => {
+    const method = req.method.toUpperCase()
     const url = new URL(req.url)
     const path = url.pathname
-    const method = req.method
 
-    if (path === '/api/registration' && method === 'POST') {
-      if (body.password) {
-        body.password = await hashPassword(body.password)
-      }
-      if (body.email) {
-        const prisma = new PrismaClient();
-        const find = await prisma.user.findFirst({
-          where: {
-            email: body.email
-          }
-        })
-        if (find) {
-          return new Response(
-            JSON.stringify({
-              "error": "Invalid input",
-              "issues": {
-                "_errors": [],
-                "email": {
-                  "_errors": [
-                    "email has been used"
-                  ]
-                }
-              }
-            }), { status: 400, headers: { 'Content-Type': 'application/json' } }
-          )
-        }
+    // if (path.startsWith('/api/patch/') || path.startsWith('/api/post/')) {
+    //   if (method === 'POST' || method === 'PATCH') {
+    //     if (body.email) {
+    //       const prisma = new PrismaClient();
+    //       const find = await prisma.user.findFirst({
+    //         where: {
+    //           email: body.email
+    //         }
+    //       })
+    //       if (find) {
+    //         return new Response(
+    //           JSON.stringify({
+    //             success: false,
+    //             "error": {
+    //               "email": "email has been used"
+    //             }
+    //           }), { status: 400, headers: { 'Content-Type': 'application/json' } }
+    //         )
+    //       }
+    //     }
+    //   }
+    // }
 
-      }
+    if (body.password) {
+      body.password = await hashPassword(body.password)
     }
     return body;
   },
@@ -81,7 +78,7 @@ export const context = {
           }), { status: 400, headers: { 'Content-Type': 'application/json' } }
         )
       }
-      if(modResult.login_data.email_verified === false) {
+      if (modResult.login_data.email_verified === false) {
         return new Response(
           JSON.stringify({
             "error": "Invalid input",

@@ -60,9 +60,7 @@ export const Client = ({ name, id, schema, schemas, onSuccess }: any &
       const res = await fetcher({
         path: `/patch/${name}/${id}`,
         method: 'patch',
-        bodyJson: {
-          body: values
-        }
+        bodyJson: values
       })
       notify?.success({
         message: 'Success',

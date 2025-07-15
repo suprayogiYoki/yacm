@@ -8,18 +8,19 @@ import { format } from 'date-fns';
 const lcfirst = (str: string): string => str.charAt(0).toLowerCase() + str.slice(1);
 
 const prisma = new PrismaClient();
-export async function PATCH(req: NextRequest, { params }: { params: any }) {
-  const { name, id } = await (params);
+export async function POST(req: NextRequest, { params }: { params: any }) {
+  const { name } = await (params);
 
   const reqJson = await req.json();
   const body = await context.bodyModifier({ req, body: reqJson })
-  if (body instanceof Response) {
+  if(body instanceof Response) {
     return body
   }
 
   let result: StandardApiResp = {
     success: false,
   }
+  result.data = { req, body: reqJson };
 
   const yaml = loadYaml('db');
   if (!yaml[name] || !yaml[name].properties) {
@@ -31,7 +32,7 @@ export async function PATCH(req: NextRequest, { params }: { params: any }) {
     schema: {
       ...schema,
       properties: Object.keys(schema.properties).reduce((acc: any, key: string) => {
-        if (!schema.properties[key].readOnly && !schema.properties[key].writeOnly) {
+        if (!schema.properties[key].readOnly) {
           acc[key] = schema.properties[key];
         }
         return acc;
@@ -40,9 +41,6 @@ export async function PATCH(req: NextRequest, { params }: { params: any }) {
   });
 
   const parsed = zodSchema.safeParse(body);
-
-
-
 
   if (!parsed.success) {
     result.error = parsed.error.errors.reduce((p, c) => ({ ...p, [c.path[0]]: c.message }), {})
@@ -53,9 +51,6 @@ export async function PATCH(req: NextRequest, { params }: { params: any }) {
     if (schema.properties[key]['x-unique'] === true) {
       const find = await (prisma[lcfirst(name) as any] as any).findFirst({
         where: {
-          id: {
-            not: parseInt(id)
-          },
           [key]: parsed.data[key]
         }
       });
@@ -68,20 +63,14 @@ export async function PATCH(req: NextRequest, { params }: { params: any }) {
     }
   }
 
-
-  let where: any = {
-    id: parseInt(id)
+  
+  if (schema.properties.created_at && schema.properties.created_at.format === 'date-time') {
+    parsed.data.created_at = new Date();
   }
 
-  if (schema.properties.updated_at && schema.properties.updated_at.format === 'date-time') {
-    parsed.data.updated_at = new Date();
-  }
-  await (prisma[lcfirst(name) as any] as any).update({
-    where,
+  await (prisma[lcfirst(name) as any] as any).create({
     data: parsed.data
   }).then((r: any) => {
-    result.data = parsed.data
-
     result.success = true
   })
     .catch((e: any) => {

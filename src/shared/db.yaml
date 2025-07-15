@@ -84,8 +84,10 @@ components:
           type: string
           format: email
           example: user@example.com
+          x-unique: true
         password:
           type: string
+          format: password
           writeOnly: true
           minLength: 6
         first_name:
@@ -122,7 +124,6 @@ components:
           format: date-time
         tenant_id:
           type: integer
-          nullable: true
           description: For multi-tenancy support
           x-rel: 
             name: Tenant

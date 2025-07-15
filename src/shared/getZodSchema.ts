@@ -17,11 +17,11 @@ export function getZodSchema({ schema }: { schema: any }) {
           break
 
         case 'integer':
-          zodSchema[key] = z.number().int();
+          zodSchema[key] = z.number().int().nullable();
           break
 
         case 'number':
-          zodSchema[key] = z.number();
+          zodSchema[key] = z.number().nullable();
           if (val.minimum !== undefined) zodSchema[key] = zodSchema[key].min(val.minimum);
           if (val.maximum !== undefined) zodSchema[key] = zodSchema[key].max(val.maximum);
           break
@@ -34,20 +34,19 @@ export function getZodSchema({ schema }: { schema: any }) {
           zodSchema[key] = z.any();
       }
 
-      if (!(schema.required ?? []).includes(key) || val.readOnly) zodSchema[key] = zodSchema[key].optional();
+      if (!(schema.required ?? []).includes(key)) zodSchema[key] = zodSchema[key].optional();
 
-      if (val.format === 'date-time') {
-        zodSchema[key] = z.preprocess((value: any) => value && value.format('YYYY-MM-DD HH:mm:ss'), zodSchema[key])
-      }
-      else if (val.format === 'date') {
-        zodSchema[key] = z.preprocess((value: any) => value && value.format('YYYY-MM-DD'), zodSchema[key])
-      }
-      else if (val.format === 'time') {
-        zodSchema[key] = z.preprocess((value: any) => value && value.format('HH:mm:ss'), zodSchema[key])
-      }
-      else if (val.type === 'integer' || val.type === 'number') {
-        zodSchema[key] = z.preprocess((value: any) => value && Number(value), zodSchema[key])
-      }
+      zodSchema[key] = z.preprocess(function (value: any) {
+        if (value === '') return null;
+        if (val.format === 'date-time') return value && value.format('YYYY-MM-DD HH:mm:ss');
+        if (val.format === 'date') return value && value.format('YYYY-MM-DD');
+        if ((val.type === 'integer' || val.type === 'number') && value) {
+          const numValue = Number(value);
+          return isNaN(numValue) ? value : numValue;
+        }
+        return value;
+
+      }, zodSchema[key])
     })
 
   return z.object(zodSchema)

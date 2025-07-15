@@ -28,6 +28,17 @@ export function InputBuilder({ schemas, item, name, withLabel, rules }: any) {
       placeholder={name}
       rules={rules}
     />
+  } 
+  else if (item.format === 'password') {
+    return <ProFormText
+      label={label}
+      name={name}
+      placeholder={name}
+      rules={rules}
+      fieldProps={{
+        type: 'password',
+      }}
+    />
   }
   return <ProFormText
     label={label}
