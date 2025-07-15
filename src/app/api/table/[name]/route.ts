@@ -42,7 +42,12 @@ export async function GET(req: NextRequest, { params }: { params: any }) {
       skip: (current - 1) * pageSize,
       take: pageSize,
     }).then((r: any) => {
-      result.data = r
+      result.data = r.map((item: any) => {
+        Object.keys(item).forEach((key) => {
+          if ((yaml[name].properties[key] as any).writeOnly === true) delete item[key]
+        });
+        return item;
+      })
     }),
     (prisma[lcfirst(name) as any] as any).count({
       where

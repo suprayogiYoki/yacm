@@ -2,15 +2,29 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
     "baseUrl": "./src",
-    "paths": { 
-      "@/store/*": ["./frontend/store/*"],
-      "@/components/*": ["./frontend/components/*"],
-      "@/provider/*": ["./frontend/provider/*"],
-      "@/lib/*": ["./frontend/lib/*"],
-      "@/*": ["./*"]
+    "paths": {
+      "@/store/*": [
+        "./frontend/store/*"
+      ],
+      "@/components/*": [
+        "./frontend/components/*"
+      ],
+      "@/provider/*": [
+        "./frontend/provider/*"
+      ],
+      "@/lib/*": [
+        "./frontend/lib/*"
+      ],
+      "@/*": [
+        "./*"
+      ]
     },
     "target": "ESNext",
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ESNext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -23,8 +37,25 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "plugins": [{ "name": "next" }]
+    "typeRoots": [
+      "./shared/types",
+      "./node_modules/@types"
+    ],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/types/**/*.tsx",
+    "shared/types/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

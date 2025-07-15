@@ -102,9 +102,11 @@ components:
           enum:
             - true
             - false
+          readOnly: true
         email_verified:
           type: boolean
           default: false
+          readOnly: true
         last_login:
           type: string
           format: date-time

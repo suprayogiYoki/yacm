@@ -4,6 +4,7 @@ import { ProColumns, ProFormDateTimePicker, ProTable } from '@ant-design/pro-com
 import { Button, Card } from 'antd';
 import { useEffect } from 'react';
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { useRouter } from 'next/navigation';
 
 // Sample data for the table, explicitly typed as DataItem[]
 
@@ -22,9 +23,7 @@ const fetcher = async ({ queryJson, bodyJson, path, method }: { queryJson?: any,
 }
 
 export const Client = ({ table, schema, schemas }: any) => {
-  useEffect(() => {
-    console.info('openapi', table, schema, schemas);
-  }, []);
+  const router = useRouter();
 
   const columns: ProColumns<any>[] = [
     {
@@ -32,7 +31,9 @@ export const Client = ({ table, schema, schemas }: any) => {
       valueType: 'indexBorder',
       width: 48,
     },
-    ...Object.entries(schema.properties).map(([name, item]: any): ProColumns => {
+    ...Object.entries(schema.properties)
+    .filter(([name, item]: any) => !item.writeOnly)
+    .map(([name, item]: any): ProColumns => {
       return ({
         title: name,
         dataIndex: name,
@@ -58,7 +59,7 @@ export const Client = ({ table, schema, schemas }: any) => {
       fixed: 'right',
       width: 120,
       render: (_, record, index) => ([
-        <Button key={`edit-${index}`} type="link" onClick={() => console.log('Edit', record)} icon={<EditOutlined/>} />,
+        <Button key={`edit-${index}`} type="link" onClick={() => router.push(`/edit/${table}/${record.id}`)} icon={<EditOutlined/>} />,
         <Button key={`delete-${index}`} type="link" onClick={() => console.log('Delete', record)} icon={<DeleteOutlined/>} />
       ]),
     },

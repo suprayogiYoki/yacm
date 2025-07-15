@@ -11,16 +11,16 @@ export function InputBuilder({ schemas, item, name, withLabel, rules }: any) {
       rules={rules}
     />
   }
-  else if (item['x-rel']?.['name'] && schemas[item['x-rel']?.['name']]) {
-    return <ProFormSelect
-      label={label}
-      name={name}
-      placeholder={name}
-      options={[]}
-      rules={rules}
-    />
+  // else if (item['x-rel']?.['name'] && schemas[item['x-rel']?.['name']]) {
+  //   return <ProFormSelect
+  //     label={label}
+  //     name={name}
+  //     placeholder={name}
+  //     options={[]}
+  //     rules={rules}
+  //   />
 
-  }
+  // }
   else if (item.format === 'date-time') {
     return <ProFormDateTimePicker
       label={label}
