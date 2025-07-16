@@ -4,6 +4,9 @@ import { getApiSchema } from "@/lib/builder/SchemaParser";
 import { Metadata } from "next";
 import { Client } from "./client";
 import { notFound } from "next/navigation";
+import { ucFirst } from "@/shared/string";
+import Link from "next/link";
+import { Button } from "antd";
 
 export async function generateMetadata({
   params,
@@ -26,11 +29,20 @@ export default async function TablePage({
 }) {
   const name = (await params).name
 
-  const apiSchema = getApiSchema({table: name});
+  const apiSchema = getApiSchema({ table: ucFirst(name) });
 
-  if(!apiSchema.schema) {
+  if (!apiSchema.schema) {
     notFound();
   }
-
-  return <Client table={name} schema={apiSchema.schema} schemas={apiSchema.schemas} />;
+  return <div>
+    <div className="gap-2 overflow-x-auto flex scrollbar-thin py-2">
+      {
+        Object.keys(apiSchema.schemas).map((key: string) => {
+          return <Link key={key} href={`/table/${key}`}><Button>{ucFirst(key)}</Button></Link>
+        })
+      }
+    </div>
+    <Client table={name} schema={apiSchema.schema} schemas={apiSchema.schemas} />
+  </div>
+    ;
 }

@@ -8,61 +8,49 @@ datasource db {
 }
 
 model User {
-  id             Int             @id @default(autoincrement())
+  id             Int       @id @default(autoincrement())
   username       String
-  email          String          @unique
+  email          String
   password       String
   first_name     String?
   last_name      String?
-  is_active      Boolean?        @default(true)
-  email_verified Boolean?        @default(false)
+  is_active      Boolean?  @default(true)
+  email_verified Boolean?  @default(false)
   last_login     DateTime?
   created_at     DateTime?
   updated_at     DateTime?
   tenant_id      Int?
-  UserRole       UserRole[]
-  PasswordReset  PasswordReset[]
-  Session        Session[]
-  AuditLog       AuditLog[]
-  Notification   Notification[]
+  Tenant         Tenant?   @relation(fields: [tenant_id], references: [id])
 }
 
 model Role {
-  id             Int              @id @default(autoincrement())
-  name           String?
-  description    String?
-  is_default     Boolean?         @default(false)
-  UserRole       UserRole[]
-  RolePermission RolePermission[]
+  id          Int      @id @default(autoincrement())
+  name        String?
+  description String?
+  is_default  Boolean? @default(false)
 }
 
 model Permission {
-  id             Int              @id @default(autoincrement())
-  code           String?
-  description    String?
-  RolePermission RolePermission[]
+  id          Int     @id @default(autoincrement())
+  code        String?
+  description String?
 }
 
 model UserRole {
-  id      Int   @id @default(autoincrement())
+  id      Int  @id @default(autoincrement())
   user_id Int?
-  User    User? @relation(fields: [user_id], references: [id])
   role_id Int?
-  Role    Role? @relation(fields: [role_id], references: [id])
 }
 
 model RolePermission {
-  id            Int         @id @default(autoincrement())
+  id            Int  @id @default(autoincrement())
   role_id       Int?
-  Role          Role?       @relation(fields: [role_id], references: [id])
   permission_id Int?
-  Permission    Permission? @relation(fields: [permission_id], references: [id])
 }
 
 model PasswordReset {
   id         Int       @id @default(autoincrement())
   user_id    Int?
-  User       User?     @relation(fields: [user_id], references: [id])
   token      String?
   expires_at DateTime?
   used       Boolean?  @default(false)
@@ -71,7 +59,6 @@ model PasswordReset {
 model Session {
   id            Int       @id @default(autoincrement())
   user_id       Int?
-  User          User?     @relation(fields: [user_id], references: [id])
   token         String?
   device_info   Json?
   created_at    DateTime?
@@ -82,7 +69,6 @@ model Session {
 model AuditLog {
   id            Int       @id @default(autoincrement())
   user_id       Int?
-  User          User?     @relation(fields: [user_id], references: [id])
   action        String?
   target_entity String?
   target_id     Int?
@@ -93,22 +79,20 @@ model AuditLog {
 }
 
 model CustomFieldDefinition {
-  id               Int                @id @default(autoincrement())
-  entity_type      String?
-  field_name       String?
-  field_type       String?
-  label            String?
-  required         Boolean?           @default(false)
-  options          Json?
-  CustomFieldValue CustomFieldValue[]
+  id          Int      @id @default(autoincrement())
+  entity_type String?
+  field_name  String?
+  field_type  String?
+  label       String?
+  required    Boolean? @default(false)
+  options     Json?
 }
 
 model CustomFieldValue {
-  id                    Int                    @id @default(autoincrement())
-  field_definition_id   Int?
-  CustomFieldDefinition CustomFieldDefinition? @relation(fields: [field_definition_id], references: [id])
-  entity_id             Int?
-  value                 String?
+  id                  Int     @id @default(autoincrement())
+  field_definition_id Int?
+  entity_id           Int?
+  value               String?
 }
 
 model Tenant {
@@ -116,6 +100,7 @@ model Tenant {
   name   String?
   slug   String?
   config Json?
+  User   User[]
 }
 
 model Translation {
@@ -128,7 +113,6 @@ model Translation {
 model Notification {
   id          Int       @id @default(autoincrement())
   user_id     Int?
-  User        User?     @relation(fields: [user_id], references: [id])
   title       String?
   message     String?
   type        String?   @default("INFO")

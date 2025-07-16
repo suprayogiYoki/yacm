@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { context } from '@/backend/lib/context';
 import { loadYaml } from '@/backend/lib/json_prisma';
-
-const lcfirst = (str: string): string => str.charAt(0).toLowerCase() + str.slice(1);
+import { lcFirst, ucFirst } from '@/shared/string';
 
 const prisma = new PrismaClient();
 export async function GET(req: NextRequest, { params }: { params: any }) {
-  const { name, id } = await (params);
+  let { name, id } = await (params);
+  name = ucFirst(name);
 
   let result: any = {
     success: false,
@@ -26,8 +26,11 @@ export async function GET(req: NextRequest, { params }: { params: any }) {
   }
 
   await Promise.all([
-    (prisma[lcfirst(name) as any] as any).findFirst({
-      where
+    (prisma[lcFirst(name) as any] as any).findFirst({
+      where,
+      include: {
+        Tenant: true
+      }
     }).then((r: any) => {
       Object.entries(properties).forEach(([key, val]: any) => {
         if (val.writeOnly) delete r[key]

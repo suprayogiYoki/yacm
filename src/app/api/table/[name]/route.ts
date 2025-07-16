@@ -3,12 +3,12 @@ import { PrismaClient } from '@prisma/client';
 import { context } from '@/backend/lib/context';
 import { loadYaml } from '@/backend/lib/json_prisma';
 import { object } from 'zod';
-
-const lcfirst = (str: string): string => str.charAt(0).toLowerCase() + str.slice(1);
+import { lcFirst, ucFirst } from '@/shared/string';
 
 const prisma = new PrismaClient();
 export async function GET(req: NextRequest, { params }: { params: any }) {
-  const { name } = await (params);
+  let { name } = await (params);
+  name = ucFirst(name);
   
   let result = {
     success: false,
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest, { params }: { params: any }) {
   }
 
   await Promise.all([
-    (prisma[lcfirst(name) as any] as any).findMany({
+    (prisma[lcFirst(name) as any] as any).findMany({
       where,
       skip: (current - 1) * pageSize,
       take: pageSize,
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest, { params }: { params: any }) {
         return item;
       })
     }),
-    (prisma[lcfirst(name) as any] as any).count({
+    (prisma[lcFirst(name) as any] as any).count({
       where
     }).then((r: any) => {
       result.total = r

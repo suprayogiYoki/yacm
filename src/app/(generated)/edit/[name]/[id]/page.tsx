@@ -2,6 +2,7 @@
 
 import { Client } from "./client";
 import { getApiSchema } from "@/lib/builder/SchemaParser";
+import { ucFirst } from "@/shared/string";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -18,14 +19,14 @@ export async function generateMetadata({
   }
 }
 
-export default async function TablePage({
+export default async function EditPage({
   params,
 }: {
   params: Promise<{ name: string, id: string }>
 }) {
   const { name, id } = (await params)
 
-  const apiSchema = getApiSchema({ table: name });
+  const apiSchema = getApiSchema({ table: ucFirst(name) });
   if (!apiSchema.schema) {
     notFound();
   }

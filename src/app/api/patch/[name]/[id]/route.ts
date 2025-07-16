@@ -3,13 +3,13 @@ import { PrismaClient } from '@prisma/client';
 import { context } from '@/backend/lib/context';
 import { loadYaml } from '@/backend/lib/json_prisma';
 import { getZodSchema } from '@/shared/getZodSchema';
-import { format } from 'date-fns';
+import { lcFirst } from '@/shared/string';
 
-const lcfirst = (str: string): string => str.charAt(0).toLowerCase() + str.slice(1);
 
 const prisma = new PrismaClient();
 export async function PATCH(req: NextRequest, { params }: { params: any }) {
-  const { name, id } = await (params);
+  let { name, id } = await (params);
+  name = ucFirst(name);
 
   const reqJson = await req.json();
   const body = await context.bodyModifier({ req, body: reqJson })
@@ -41,9 +41,6 @@ export async function PATCH(req: NextRequest, { params }: { params: any }) {
 
   const parsed = zodSchema.safeParse(body);
 
-
-
-
   if (!parsed.success) {
     result.error = parsed.error.errors.reduce((p, c) => ({ ...p, [c.path[0]]: c.message }), {})
     return Response.json(result, { status: 400 });
@@ -51,7 +48,7 @@ export async function PATCH(req: NextRequest, { params }: { params: any }) {
 
   for (const key of Object.keys(parsed.data)) {
     if (schema.properties[key]['x-unique'] === true) {
-      const find = await (prisma[lcfirst(name) as any] as any).findFirst({
+      const find = await (prisma[lcFirst(name) as any] as any).findFirst({
         where: {
           id: {
             not: parseInt(id)
@@ -76,7 +73,7 @@ export async function PATCH(req: NextRequest, { params }: { params: any }) {
   if (schema.properties.updated_at && schema.properties.updated_at.format === 'date-time') {
     parsed.data.updated_at = new Date();
   }
-  await (prisma[lcfirst(name) as any] as any).update({
+  await (prisma[lcFirst(name) as any] as any).update({
     where,
     data: parsed.data
   }).then((r: any) => {

@@ -4,12 +4,12 @@ import { context } from '@/backend/lib/context';
 import { loadYaml } from '@/backend/lib/json_prisma';
 import { getZodSchema } from '@/shared/getZodSchema';
 import { format } from 'date-fns';
-
-const lcfirst = (str: string): string => str.charAt(0).toLowerCase() + str.slice(1);
+import { lcFirst, ucFirst } from '@/shared/string';
 
 const prisma = new PrismaClient();
 export async function POST(req: NextRequest, { params }: { params: any }) {
-  const { name } = await (params);
+  let { name } = await (params);
+  name = ucFirst(name);
 
   const reqJson = await req.json();
   const body = await context.bodyModifier({ req, body: reqJson })
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest, { params }: { params: any }) {
 
   for (const key of Object.keys(parsed.data)) {
     if (schema.properties[key]['x-unique'] === true) {
-      const find = await (prisma[lcfirst(name) as any] as any).findFirst({
+      const find = await (prisma[lcFirst(name) as any] as any).findFirst({
         where: {
           [key]: parsed.data[key]
         }
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest, { params }: { params: any }) {
     parsed.data.created_at = new Date();
   }
 
-  await (prisma[lcfirst(name) as any] as any).create({
+  await (prisma[lcFirst(name) as any] as any).create({
     data: parsed.data
   }).then((r: any) => {
     result.success = true

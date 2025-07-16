@@ -3,9 +3,10 @@ import { InputBuilder } from '@/lib/builder/InputBuilder';
 import { ActionType, ProColumns, ProFormDateTimePicker, ProTable } from '@ant-design/pro-components';
 import { Button, Card, Popconfirm } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
+import Icon, { DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
-import { labelcase } from '@/shared/string';
+import { labelcase, ucFirst } from '@/shared/string';
+import Link from 'next/link';
 
 // Sample data for the table, explicitly typed as DataItem[]
 
@@ -36,7 +37,6 @@ export const Client = ({ table, schema, schemas }: any) => {
     actionRef.current?.reload(); // Refresh table
   };
 
-
   const columns: ProColumns<any>[] = useMemo(() =>
   ([
     {
@@ -62,7 +62,7 @@ export const Client = ({ table, schema, schemas }: any) => {
             style: { maxWidth: '200px', backgroundColor: '#f0f0f0' }
           }),
           renderFormItem: (_schema, _config, _form, _action) => {
-            return InputBuilder({ schemas, item, name });
+            return InputBuilder({ item, name });
           },
         });
       }),
@@ -71,19 +71,29 @@ export const Client = ({ table, schema, schemas }: any) => {
       key: 'actions',
       fixed: 'right',
       width: 120,
-      render: (_, record:any, index) => ([
-        <Button key={`edit-${index}`} type="link" onClick={() => router.push(`/edit/${table}/${record.id}`)} icon={<EditOutlined />} />,
+      render: (_, record: any, index) => ([
+
+        <Link href={`/view/${table}/${record.id}`}>
+          <Button key={`view-${index}`} type="link" onClick={() => router.push(`/view/${table}/${record.id}`)} icon={<EyeOutlined/>} />
+        </Link>,
+
+        <Link href={`/edit/${table}/${record.id}`}>
+          <Button key={`edit-${index}`} type="link" onClick={() => router.push(`/edit/${table}/${record.id}`)} icon={<EditOutlined />} />
+        </Link>,
+
         <Popconfirm
           title="Are you sure to delete?"
           onConfirm={() => handleDelete(record.id)}
           okButtonProps={{ loading: deletingId === record.id }}
         >
-          <Button
-            type="link"
-            danger
-            icon={<DeleteOutlined />}
-            loading={deletingId === record.id}
-          />
+          <Link href={`/edit/${table}/${record.id}`}>
+            <Button
+              type="link"
+              danger
+              icon={<DeleteOutlined />}
+              loading={deletingId === record.id}
+            />
+          </Link>
         </Popconfirm>
       ]),
     },
@@ -93,7 +103,7 @@ export const Client = ({ table, schema, schemas }: any) => {
   return (
     <div className="min-h-screen bg-gray-100 p-8 flex items-center justify-center font-sans">
       <Card
-        title={<span className="text-2xl font-bold text-gray-800">Dynamic Data Table</span>}
+        title={<span className="text-2xl font-bold text-gray-800">{ucFirst(table)} Data Table</span>}
         className="w-full max-w-5xl shadow-lg rounded-xl p-6 bg-white"
         styles={{
           header: {
@@ -133,7 +143,7 @@ export const Client = ({ table, schema, schemas }: any) => {
           }}
           scroll={{ x: 'max-content' }}
           toolBarRender={(action, { selectedRows, }) => [
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push(`/add/${table}`)}>Add</Button>
+            <Link href={`/add/${table}`}><Button type="primary" icon={<PlusOutlined />} onClick={() => router.push(`/add/${table}`)}>Add</Button></Link>
           ]}
         />
       </Card>

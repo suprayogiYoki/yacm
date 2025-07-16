@@ -3,7 +3,8 @@ import { InputBuilder } from "@/lib/builder/InputBuilder";
 import { useNotifier } from "@/provider/notificationProvider";
 import { createZodRule, getZodSchema } from "@/shared/getZodSchema";
 import { ProForm } from "@ant-design/pro-components";
-import { Spin } from "antd";
+import { Card, Form, Spin } from "antd";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -21,12 +22,26 @@ const fetcher = async ({ queryJson, bodyJson, path, method }: { queryJson?: any,
   }).then((res) => res.json());
 }
 
-export const Client = ({ name, schema, schemas, onSuccess }: any &
+export const Client = ({ name, id, schema, schemas, onSuccess }: any &
 {
   onSuccess?: () => void,
 }) => {
   const router = useRouter();
   const formRef = useRef<any>({});
+  const [form] = Form.useForm();
+  const [isFormLoading, setIsFormLoading] = useState(false);
+
+  useEffect(() => {
+    setIsFormLoading(true);
+    fetcher({
+      path: `/get/${name}/${id}`,
+      method: 'get'
+    }).then((res: any) => {
+      formRef.current.setFieldsValue(res.data);
+      setIsFormLoading(false);
+      console.log(res.data);
+    })
+  }, [])
 
   const zodSchema = useMemo(() => getZodSchema({
     schema: {
@@ -45,12 +60,12 @@ export const Client = ({ name, schema, schemas, onSuccess }: any &
   const handleSubmit = async (values: any) => {
     try {
       const res = await fetcher({
-        path: `/post/${name}`,
-        method: 'post',
+        path: `/patch/${name}/${id}`,
+        method: 'patch',
         bodyJson: values
       })
-
       if (res.success === true) {
+
         notify?.success({
           message: 'Success',
           description: 'Data saved successfully!',
@@ -59,7 +74,10 @@ export const Client = ({ name, schema, schemas, onSuccess }: any &
           onSuccess?.() ?? router.back();
         }, 2000);
       }
-      else  {
+      else {
+        if (res.error) {
+          form.setFields(Object.entries(res.error).map(([key, value]) => ({ name: key, errors: [value] })) as any);
+        }
         throw new Error(res.error);
       }
     } catch (err: any) {
@@ -70,9 +88,30 @@ export const Client = ({ name, schema, schemas, onSuccess }: any &
     }
   };
 
-  return <div className="p-[5px]">
-    <div className="relative">
+  return <div className="min-h-screen bg-gray-100 p-8 font-sans">
+    <div className="mb-3">
+      <Card>
+        <div className="flex gap-2">
+          <Link href={`/table/${name}`}>Back</Link>
+          <Link href={`/add/${name}`}>Add New</Link>
+        </div>
+      </Card>
+    </div>
+    <Card
+      title={<span className="text-2xl font-bold text-gray-800">Edit {name}</span>}
+      className="shadow-lg rounded-xl"
+      styles={{
+        header: {
+          padding: '16px',
+          borderBottom: '1px solid #f0f0f0',
+        },
+        body: {
+          padding: '24px',
+        },
+      }}
+    >
       <ProForm
+      form={form}
         formRef={formRef}
         onFinish={handleSubmit}
         autoFocusFirstInput
@@ -86,11 +125,10 @@ export const Client = ({ name, schema, schemas, onSuccess }: any &
       >
         {
           Object.entries(schema.properties)
-            .filter(([name, item]: any) => item.readOnly !== true)
+            .filter(([name, item]: any) => item.readOnly !== true && item.writeOnly !== true)
             .map(([name, item]: any) => {
               return <InputBuilder
                 key={name}
-                schemas={schemas}
                 item={item}
                 name={name}
                 rules={[createZodRule(zodSchema?.shape?.[name])]}
@@ -99,6 +137,9 @@ export const Client = ({ name, schema, schemas, onSuccess }: any &
             })
         }
       </ProForm>
-    </div>
+      {isFormLoading && <div className="absolute top-0 left-0 w-full h-full flex justify-center items-center backdrop-blur-sm">
+        <Spin><div style={{ height: 200 }}>Loading form...</div></Spin>
+      </div>}
+    </Card>
   </div>;
 };

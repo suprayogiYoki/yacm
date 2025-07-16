@@ -10,7 +10,12 @@ interface Property {
   default?: any;
   nullable?: boolean;
   'x-autoincrement'?: boolean;
-  '$ref'?: string; 
+  '$ref'?: string;
+  'x-rel'?: {
+    name: string,
+    table?: string,
+    fk: string
+  };
   description?: string
 }
 
@@ -43,11 +48,18 @@ export function generateFieldLine(
         ? ` @default(${typeof prop.default == 'boolean' || typeof prop.default == 'number' ? prop.default : `"${prop.default}"`})`
         : '';
   let res = `  ${key} ${type}${optional}${defaultVal}`;
-  if (prop['$ref']) {
-    const refs:string[] = prop['$ref'].split('/');
-    const rel_ref = refs[refs.length - 1];
-    const rel_table = refs[refs.length - 3];
-    res += `\n  ${rel_table}   ${rel_table}? @relation(fields: [${key}], references: [${rel_ref}])`;
+  // if (prop['$ref']) {
+  //   const refs:string[] = prop['$ref'].split('/');
+  //   const rel_ref = refs[refs.length - 1];
+  //   const rel_table = refs[refs.length - 3];
+  //   res += `\n  ${rel_table}   ${rel_table}? @relation(fields: [${key}], references: [${rel_ref}])`;
+  // }
+
+  if (prop['x-rel']) {
+    const rel_ref = prop['x-rel'].fk;
+    const rel_name = prop['x-rel'].name;
+    const rel_table = prop['x-rel'].table ?? rel_name;
+    res += `\n  ${rel_name}   ${rel_table}? @relation(fields: [${key}], references: [${rel_ref}])`;
   }
   return res;
 }

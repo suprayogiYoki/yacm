@@ -80,6 +80,7 @@ components:
           example: johndoe
           minLength: 3
           maxLength: 50
+          x-unique: true
         email:
           type: string
           format: email
@@ -194,6 +195,8 @@ components:
           format: int64
           $ref: "#/components/schemas/Role/properties/id"
           description: Foreign key to Role.id
+      required:
+        - id
 
     RolePermission:
       type: object
@@ -214,6 +217,8 @@ components:
           format: int64
           $ref: "#/components/schemas/Permission/properties/id"
           description: Foreign key to Permission.id
+      required:
+        - id
 
     # --- Security Tables ---
     PasswordReset:

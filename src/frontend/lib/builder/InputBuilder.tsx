@@ -1,7 +1,7 @@
 import { labelcase } from "@/shared/string";
 import { ProFormCheckbox, ProFormDateTimePicker, ProFormSelect, ProFormText } from "@ant-design/pro-components";
 
-export function InputBuilder({ schemas, item, name, withLabel, rules }: any) {
+export function InputBuilder({ item, name, withLabel, rules }: { item: any, name: string, withLabel?: boolean, rules?: any }) {
   const label = withLabel ? labelcase(name) : null
   if (item.type === 'boolean') {
     return <ProFormCheckbox
@@ -28,7 +28,7 @@ export function InputBuilder({ schemas, item, name, withLabel, rules }: any) {
       placeholder={name}
       rules={rules}
     />
-  } 
+  }
   else if (item.format === 'password') {
     return <ProFormText
       label={label}
