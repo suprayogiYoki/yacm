@@ -5,6 +5,7 @@ export const fetcher = async ({ queryJson, bodyJson, path, method }: { queryJson
   }
   return await fetch(url, {
     body: bodyJson ? JSON.stringify(bodyJson) : null,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
     },

@@ -4,10 +4,10 @@ import { fetcher } from "@/lib/fetcher";
 import { useNotifier } from "@/provider/notificationProvider";
 import { createZodRule, getZodSchema } from "@/shared/getZodSchema";
 import { ProForm } from "@ant-design/pro-components";
-import { Card, Form, Spin } from "antd";
+import { Form } from "antd";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo, useRef } from "react";
 
 
 export const Client = ({ name, schema }: { name:string, schema:any }) => {
@@ -40,11 +40,11 @@ export const Client = ({ name, schema }: { name:string, schema:any }) => {
       if (res.success === true) {
         notify?.success({
           message: 'Success',
-          description: 'Data saved successfully!',
+          description: 'Login successfully!',
         });
-        // setTimeout(() => {
-        //   router.push('/login')
-        // }, 1000);
+        setTimeout(() => {
+          router.replace('/');
+        }, 1000);
       }
       else {
         if (res.error) {
@@ -55,7 +55,7 @@ export const Client = ({ name, schema }: { name:string, schema:any }) => {
     } catch (err: any) {
       notify?.error({
         message: 'Failed',
-        description: 'Failed to save data',
+        description: 'Login Failed',
       });
     }
   };

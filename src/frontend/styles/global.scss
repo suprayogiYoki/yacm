@@ -1,16 +1,37 @@
 @use "tailwindcss";
 
+.flex-col {
+  flex-direction: column;
+}
+body {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 0;
+  }
+  
+  h2 {
+    font-size: x-large;
+  }
+}
+
+aside .ant-menu.ant-menu-root.ant-menu-vertical {
+  border-right: none;
+}
+
 /* Optional base styles */
 @layer base {
   html {
     @apply scroll-smooth;
 
     body {
-      padding: 3px;
-
       a {
         color: #2563eb;
       }
+
       a:hover {
         color: #1e40af;
         text-decoration-thickness: 2px;

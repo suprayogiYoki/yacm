@@ -1,23 +1,38 @@
 // middleware.ts
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { verifyToken } from '@/shared/jwt'
-import { cookies } from 'next/headers'
+import { jwtVerify } from 'jose'
 
 const needLogin = ['/add', '/edit', '/table', '/view']
+const nonLoginOnly = ['/login', '/register']
+
 export async function middleware(req: NextRequest) {
-  const token = (await cookies()).get('token')?.value
+  const token = req.cookies.get('token')?.value
+  const { payload } = token ? await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET)) : { payload: null };
   const pathname = req.nextUrl.pathname
   const headers = new Headers(req.headers)
   headers.set('x-pathname', pathname)
-  // console.log('verify', token);
 
   let reject = false;
-  // jika tidak butuh login langsung
-  for (const check of needLogin) {
-    if (req.nextUrl.pathname.startsWith(check) === true) {
-      console.log(req.nextUrl.pathname)
+  // check path yang butuh login
+  if(!payload) {
+    if (pathname === '/') {
       reject = true;
+    }
+    for (const check of needLogin) {
+      if (req.nextUrl.pathname.startsWith(check) === true) {
+        reject = true;
+      }
+    }
+  }
+  else {
+    // const requestHeaders = new Headers(req.headers);
+    // requestHeaders.set('x-user', JSON.stringify(payload));
+    // hanya non login
+    for (const check of nonLoginOnly) {
+      if (req.nextUrl.pathname.startsWith(check) === true) {
+        return NextResponse.redirect(new URL('/', req.url))
+      }
     }
   }
 

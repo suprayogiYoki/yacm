@@ -56,10 +56,10 @@ export async function POST(req: NextRequest, { params }: { params: any }) {
     where: {
       email: parsed.data.email
     }
-  }).then(async (res) => {
+  }).then(async (res:any) => {
     if (res) {
       const valid = await comparePassword(parsed.data.password, res.password)
-      if(!valid) {
+      if (!valid) {
         return null
       }
     }
@@ -72,16 +72,15 @@ export async function POST(req: NextRequest, { params }: { params: any }) {
 
   const { password, ...data } = found;
   const token = signToken({ username: data.username, id: data.id });
-  const response = NextResponse.next();
+  const response = NextResponse.json({
+    data: data,
+    success: true,
+  }, { status: 200, headers: { 'Authorization': `Bearer ${token}` } });
   response.cookies.set('token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     maxAge: 3600,
     path: '/',
   })
-  return Response.json({
-    data: data,
-    token,
-    success: true,
-  }, { status: 200,headers: { 'Authorization': `Bearer ${token}` } });
+  return response;
 }
