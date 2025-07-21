@@ -7,22 +7,10 @@ import Icon, { DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined } from '@
 import { useRouter } from 'next/navigation';
 import { labelcase, ucFirst } from '@/shared/string';
 import Link from 'next/link';
+import { fetcher } from '@/lib/fetcher';
 
 // Sample data for the table, explicitly typed as DataItem[]
 
-const fetcher = async ({ queryJson, bodyJson, path, method }: { queryJson?: any, bodyJson?: any, path: string, method: string }) => {
-  let url = "/api" + path;
-  if (queryJson) {
-    url += `?${new URLSearchParams(queryJson).toString()}`;
-  }
-  return await fetch(url, {
-    body: bodyJson ? JSON.stringify(bodyJson) : null,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    method: method.toUpperCase(),
-  }).then((res) => res.json());
-}
 
 export const Client = ({ table, schema, schemas }: any) => {
   const router = useRouter();
@@ -127,7 +115,6 @@ export const Client = ({ table, schema, schemas }: any) => {
             showSizeChanger: false,
           }}
           request={async (params) => {
-            console.log('params', params);
             const { current, pageSize } = params
             return await fetcher({
               path: `/table/${table}`,

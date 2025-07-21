@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 
-export const Client = ({ name, id, schema, schemas, initData }: any &
+export const Client = ({ name,schema, initData }: any &
 {
   onSuccess?: () => void,
 }) => {

@@ -9,11 +9,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef } from "react";
 
-export const Client = ({ name, schema, schemas, onSuccess }: any &
-{
-  onSuccess?: () => void,
-}) => {
-  const router = useRouter();
+export const Client = ({ name, schema }:
+  {
+    name: string,
+    schema: any,
+    schemas: any
+  }) => {
   const formRef = useRef<any>({});
   const [form] = Form.useForm()
 
@@ -34,7 +35,7 @@ export const Client = ({ name, schema, schemas, onSuccess }: any &
   const handleSubmit = async (values: any) => {
     try {
       const res = await fetcher({
-        path: `/post/${name}`,
+        path: `/tenant/register`,
         method: 'post',
         bodyJson: values
       })
@@ -45,7 +46,7 @@ export const Client = ({ name, schema, schemas, onSuccess }: any &
           description: 'Data saved successfully!',
         });
         setTimeout(() => {
-          onSuccess?.() ?? router.back();
+          // onSuccess?.() ?? router.back();
         }, 2000);
       }
       else {
@@ -62,53 +63,31 @@ export const Client = ({ name, schema, schemas, onSuccess }: any &
     }
   };
 
-  return <div className="min-h-screen bg-gray-100 p-8 font-sans">
-    <div className="mb-3">
-      <Card>
-        <div className="flex gap-2">
-          <Link href={`/table/${name}`}>Back</Link>
-        </div>
-      </Card>
-    </div>
-    <Card
-      title={<span className="text-2xl font-bold text-gray-800">Add {name}</span>}
-      className="shadow-lg rounded-xl"
-      styles={{
-        header: {
-          padding: '16px',
-          borderBottom: '1px solid #f0f0f0',
-        },
-        body: {
-          padding: '24px',
-        },
-      }}>
-      <ProForm
-        form={form}
-        formRef={formRef}
-        onFinish={handleSubmit}
-        autoFocusFirstInput
-        submitter={{
-          searchConfig: {
-            submitText: 'Save',
-            resetText: 'Cancel',
-          },
-          render: (_, dom) => [dom[1], dom[0]],
-        }}
-      >
-        {
-          Object.entries(schema.properties)
-            .filter(([name, item]: any) => item.readOnly !== true)
-            .map(([name, item]: any) => {
-              return <InputBuilder
-                key={name}
-                item={item}
-                name={name}
-                rules={[createZodRule(zodSchema?.shape?.[name])]}
-                withLabel
-              />
-            })
-        }
-      </ProForm>
-    </Card>
-  </div>;
+  return <ProForm
+    form={form}
+    formRef={formRef}
+    onFinish={handleSubmit}
+    autoFocusFirstInput
+    submitter={{
+      searchConfig: {
+        submitText: 'Save',
+        resetText: 'Cancel',
+      },
+      render: (_, dom) => [dom[1], dom[0]],
+    }}
+  >
+    {
+      Object.entries(schema.properties)
+        .filter(([name, item]: any) => item.readOnly !== true)
+        .map(([name, item]: any) => {
+          return <InputBuilder
+            key={name}
+            item={item}
+            name={name}
+            rules={[createZodRule(zodSchema?.shape?.[name])]}
+            withLabel
+          />
+        })
+    }
+  </ProForm>;
 };

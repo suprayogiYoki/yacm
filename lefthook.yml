@@ -17,16 +17,16 @@
 #         - security
 #       run: bundle audit
 #
-pre-commit:
-  parallel: false
-  commands:
-    1. make prisma scheme:
-      run: npx tsx src/backend/lib/run_merge_prisma.ts
-    2. format prisma fix relation:
-      run: npx prisma format --schema=src/backend/prisma/schema.prisma
-    3. generate prisma code:
-      run: npx prisma generate --schema=src/backend/prisma/schema.prisma
-    # 3. migrate prisma db:
+# pre-commit:
+#   parallel: false
+#   commands:
+#     1. make prisma scheme:
+#       run: npx tsx src/backend/lib/run_merge_prisma.ts
+#     2. format prisma fix relation:
+#       run: npx prisma format --schema=src/backend/prisma/schema.prisma
+#     3. generate prisma code:
+#       run: npx prisma generate --schema=src/backend/prisma/schema.prisma
+    # 4. migrate prisma db:
     #   run: echo 'auto' | npx prisma migrate dev --schema=src/backend/prisma/schema.prisma
 
     # - run: yarn eslint {staged_files}

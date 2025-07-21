@@ -55,6 +55,9 @@ export async function POST(req: NextRequest, { params }: { params: any }) {
   const found = await prisma.user.findFirst({
     where: {
       email: parsed.data.email
+    }, 
+    include: {
+      Tenant: true
     }
   }).then(async (res:any) => {
     if (res) {
@@ -71,7 +74,17 @@ export async function POST(req: NextRequest, { params }: { params: any }) {
   }
 
   const { password, ...data } = found;
-  const token = signToken({ username: data.username, id: data.id });
+  const token = signToken({ 
+    user: {
+      id: found.id,
+      username: found.username
+    },
+    tenant: {
+      id: found.Tenant.id,
+      name: found.Tenant.name,
+      slug: found.Tenant.slug
+    }
+  });
   const response = NextResponse.json({
     data: data,
     success: true,

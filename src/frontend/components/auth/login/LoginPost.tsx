@@ -45,7 +45,6 @@ export default function LoginPost() {
     try {
       // Full schema validation on submit
       const validatedData = schema.parse(values);
-      console.log('Validated data:', validatedData);
       // Submit to API here
     } catch (err) {
       if (err instanceof ZodError) {

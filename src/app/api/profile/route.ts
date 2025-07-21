@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { context } from '@/backend/lib/context';
 import { loadYaml } from '@/backend/lib/json_prisma';
-import { lcFirst, ucFirst } from '@/shared/string';
+import { getPayload } from '@/backend/lib/session';
 
 const prisma = new PrismaClient();
-export async function GET(req: NextRequest, { params }: { params: any }) {
-  let { name, id } = await (params);
-  name = ucFirst(name);
+export async function GET(req: NextRequest) {
+  const session: any = await getPayload(req);
+  if (!session?.user?.id) {
+    return Response.json({ success: false, session }, { status: 401 });
+  }
+
+  let id= session?.user?.id;
 
   let result: any = {
     success: false,
@@ -15,19 +19,22 @@ export async function GET(req: NextRequest, { params }: { params: any }) {
   }
 
   const yaml = loadYaml('db');
-  if (!yaml[name] || !yaml[name].properties) {
-    return Response.json(result, { status: 404 });
+  if (!yaml.User || !yaml.User.properties) {
+    return Response.json({...result, id: session}, { status: 404 });
   }
 
-  const properties = yaml[name].properties;
+  const properties = yaml.User.properties;
 
   let where: any = {
     id: parseInt(id)
   }
 
   await Promise.all([
-    (prisma[lcFirst(name) as any] as any).findFirst({
-      where
+    prisma.user.findFirst({
+      where,
+      include: {
+        Tenant: true
+      }
     }).then((r: any) => {
       Object.entries(properties).forEach(([key, val]: any) => {
         if (val.writeOnly) delete r[key]
@@ -37,8 +44,8 @@ export async function GET(req: NextRequest, { params }: { params: any }) {
   ]).then(() => {
     if (result.data)
       result.success = true
-  })
+  });
 
-  let modResult = await context.resultModifier({ req, result })
+  let modResult = await context.resultModifier({ req, result });
   return Response.json(modResult, { status: 200 });
 }

@@ -3,11 +3,14 @@ import { InputBuilder } from "@/lib/builder/InputBuilder";
 import { fetcher } from "@/lib/fetcher";
 import { useNotifier } from "@/provider/notificationProvider";
 import { createZodRule, getZodSchema } from "@/shared/getZodSchema";
+import { setUser, setTenant } from "@/store/slices/auth_slice";
+import { RootState } from "@/store/store";
 import { ProForm } from "@ant-design/pro-components";
 import { Form } from "antd";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 
 export const Client = ({ name, schema }: { name:string, schema:any }) => {
@@ -28,6 +31,8 @@ export const Client = ({ name, schema }: { name:string, schema:any }) => {
   }), [schema]);
 
   const notify = useNotifier();
+  const auth = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
 
   const handleSubmit = async (values: any) => {
     try {
@@ -42,6 +47,15 @@ export const Client = ({ name, schema }: { name:string, schema:any }) => {
           message: 'Success',
           description: 'Login successfully!',
         });
+        dispatch(setUser({
+          id: `${res.data.id}`,
+          username: res.data.username,
+        }));
+        dispatch(setTenant({
+          id: `${res.data.Tenant.id}`,
+          name: res.data.Tenant.name,
+          slug: res.data.Tenant.slug
+        }));
         setTimeout(() => {
           router.replace('/');
         }, 1000);
@@ -53,13 +67,13 @@ export const Client = ({ name, schema }: { name:string, schema:any }) => {
         throw new Error(res.error);
       }
     } catch (err: any) {
+      console.log(err, 'login');
       notify?.error({
         message: 'Failed',
         description: 'Login Failed',
       });
     }
   };
-
 
   return <>
     <ProForm
@@ -69,7 +83,7 @@ export const Client = ({ name, schema }: { name:string, schema:any }) => {
       autoFocusFirstInput
       submitter={{
         searchConfig: {
-          submitText: 'Save',
+          submitText: 'Login',
           resetText: 'Cancel',
         },
         render: (_, dom) => [dom[1], dom[0]],
@@ -89,6 +103,6 @@ export const Client = ({ name, schema }: { name:string, schema:any }) => {
           })
       }
     </ProForm>
-    <div className='pt-3'>Already has an account? <Link href="/login">Login</Link></div>
+    <div className='pt-3'>Doesn't has an account? <Link href="/Register">Register</Link></div>
   </>;
 };

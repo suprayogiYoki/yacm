@@ -3,12 +3,13 @@ import { PrismaClient } from '@prisma/client';
 import { context } from '@/backend/lib/context';
 import { loadYaml } from '@/backend/lib/json_prisma';
 import { getZodSchema } from '@/shared/getZodSchema';
+import { format } from 'date-fns';
 import { lcFirst, ucFirst } from '@/shared/string';
-
+import { getPayload } from '@/backend/lib/session';
 
 const prisma = new PrismaClient();
-export async function PATCH(req: NextRequest, { params }: { params: any }) {
-  let { name, id } = await (params);
+export async function POST(req: NextRequest) {
+  let name = 'Tenant';
   name = ucFirst(name);
 
   const reqJson = await req.json();
@@ -20,6 +21,7 @@ export async function PATCH(req: NextRequest, { params }: { params: any }) {
   let result: StandardApiResp = {
     success: false,
   }
+  result.data = { req, body: reqJson };
 
   const yaml = loadYaml('db');
   if (!yaml[name] || !yaml[name].properties) {
@@ -31,7 +33,7 @@ export async function PATCH(req: NextRequest, { params }: { params: any }) {
     schema: {
       ...schema,
       properties: Object.keys(schema.properties).reduce((acc: any, key: string) => {
-        if (!schema.properties[key].readOnly && !schema.properties[key].writeOnly) {
+        if (!schema.properties[key].readOnly) {
           acc[key] = schema.properties[key];
         }
         return acc;
@@ -40,6 +42,8 @@ export async function PATCH(req: NextRequest, { params }: { params: any }) {
   });
 
   const parsed = zodSchema.safeParse(body);
+
+  const payload: any = await getPayload(req);
 
   if (!parsed.success) {
     result.error = parsed.error.errors.reduce((p, c) => ({ ...p, [c.path[0]]: c.message }), {})
@@ -50,9 +54,6 @@ export async function PATCH(req: NextRequest, { params }: { params: any }) {
     if (schema.properties[key]['x-unique'] === true) {
       const find = await (prisma[lcFirst(name) as any] as any).findFirst({
         where: {
-          id: {
-            not: parseInt(id)
-          },
           [key]: parsed.data[key]
         }
       });
@@ -66,25 +67,32 @@ export async function PATCH(req: NextRequest, { params }: { params: any }) {
   }
 
 
-  let where: any = {
-    id: parseInt(id)
+  if (schema.properties.created_at && schema.properties.created_at.format === 'date-time') {
+    parsed.data.created_at = new Date();
   }
 
-  if (schema.properties.updated_at && schema.properties.updated_at.format === 'date-time') {
-    parsed.data.updated_at = new Date();
-  }
-  await (prisma[lcFirst(name) as any] as any).update({
-    where,
-    data: parsed.data
-  }).then((r: any) => {
-    result.data = parsed.data
+  await prisma.$transaction(async (tx) => {
+    const tenant = await tx.tenant.create({
+      data: parsed.data
+    })
 
-    result.success = true
-  })
+    return tx.user.update({
+      where: {
+        id: payload?.id
+      },
+      data: {
+        tenant_id: tenant.id
+      }
+    })
+    .then((r: any) => {
+      result.success = true
+    })
     .catch((e: any) => {
       result.error = e
       result.success = false
     })
+  })
+
 
 
   let modResult = await context.resultModifier({ req, result })

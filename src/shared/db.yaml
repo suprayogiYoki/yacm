@@ -379,9 +379,11 @@ components:
         name:
           type: string
           example: Acme Corp
+          x-unique: true
         slug:
           type: string
           example: acme
+          x-unique: true
         config:
           type: object
           additionalProperties: true
